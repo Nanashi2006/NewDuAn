@@ -89,7 +89,7 @@ namespace Chapter14DynamicEnvironment
 
             terrainData.SetHeights(0, 0, heights);
 
-            TerrainLayer grassLayer = ScriptableObject.CreateInstance<TerrainLayer>();
+            TerrainLayer grassLayer = new TerrainLayer();
             grassLayer.name = "Runtime_Grass";
             grassLayer.diffuseTexture = CreateColorTexture(
                 new Color(0.17f, 0.42f, 0.12f, 1f),
