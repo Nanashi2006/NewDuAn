@@ -8,13 +8,13 @@ namespace Chapter14DynamicEnvironment
 
         private void Start()
         {
-            player = FindFirstObjectByType<PlayerController>();
+            player = FindAnyObjectByType<PlayerController>();
         }
 
         private void OnGUI()
         {
             if (player == null)
-                player = FindFirstObjectByType<PlayerController>();
+                player = FindAnyObjectByType<PlayerController>();
 
             string movementState = player != null && player.IsSwimming
                 ? "TRẠNG THÁI: ĐANG Ở DƯỚI NƯỚC - GIẢM TỐC"
