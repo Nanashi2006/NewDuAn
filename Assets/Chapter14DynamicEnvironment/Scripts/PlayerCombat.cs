@@ -22,7 +22,8 @@ namespace Chapter14DynamicEnvironment
 
             if (mouse.leftButton.wasPressedThisFrame && Time.time >= nextAttackTime)
             {
-                nextAttackTime = Time.time + attackCooldown;
+                LakesideAnimationDriver animation = GetComponent<LakesideAnimationDriver>();
+                nextAttackTime = Time.time + Mathf.Max(attackCooldown, animation != null ? animation.AttackDuration : 0f);
                 Attack();
             }
         }
@@ -46,6 +47,9 @@ namespace Chapter14DynamicEnvironment
 
                 enemyHealth.TakeDamage(damage);
             }
+
+            LakesideAnimationDriver animation = GetComponent<LakesideAnimationDriver>();
+            if (animation != null) animation.PlayAttack();
 
             CharacterPose pose = GetComponent<CharacterPose>();
             if (pose != null) pose.Swing();

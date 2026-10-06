@@ -7,8 +7,8 @@ namespace Chapter14DynamicEnvironment
     public class PlayerController : MonoBehaviour
     {
         [Header("Di chuyển")]
-        public float walkSpeed = 5f;
-        public float runSpeed = 8f;
+        public float walkSpeed = 3f;
+        public float runSpeed = 6f;
         public float rotationSpeed = 12f;
 
         [Header("Nhảy / trọng lực")]
@@ -63,9 +63,8 @@ namespace Chapter14DynamicEnvironment
             if (IsSwimming)
                 moveSpeed *= swimmingSpeedMultiplier;
 
-            controller.Move(moveDirection * moveSpeed * Time.deltaTime);
-
-            if (moveDirection.sqrMagnitude > 0.001f)
+            ThirdPersonCamera view = mainCamera != null ? mainCamera.GetComponent<ThirdPersonCamera>() : null;
+            if (moveDirection.sqrMagnitude > 0.001f && (view == null || !view.IsFirstPerson))
             {
                 Quaternion targetRotation = Quaternion.LookRotation(moveDirection, Vector3.up);
                 transform.rotation = Quaternion.Slerp(
@@ -86,7 +85,8 @@ namespace Chapter14DynamicEnvironment
 
             float gravityMultiplier = IsSwimming ? swimmingGravityMultiplier : 1f;
             verticalVelocity += gravity * gravityMultiplier * Time.deltaTime;
-            controller.Move(Vector3.up * verticalVelocity * Time.deltaTime);
+            // One Move keeps horizontal velocity available to the asset animation driver.
+            controller.Move((moveDirection * moveSpeed + Vector3.up * verticalVelocity) * Time.deltaTime);
         }
 
         public void SetSwimming(bool swimming)

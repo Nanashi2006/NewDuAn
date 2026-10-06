@@ -29,6 +29,9 @@ namespace AQUAS_Lite
 
         public void OnWillRenderObject()
         {
+            // Camera.Render from inside an SRP render callback re-enters URP's frame context.
+            // This legacy reflection is only supported by the Built-in pipeline.
+            if (UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline != null) return;
 
 #if UNITY_5_3 || UNITY_5_4 || UNITY_5_5
         if (disableInEditMode && !Application.isPlaying)
@@ -45,7 +48,7 @@ namespace AQUAS_Lite
             if (!cam)
                 return;
 
-            // Safeguard from recursive reflections.        
+            // Safeguard from recursive reflections.
             if (s_InsideRendering)
                 return;
             s_InsideRendering = true;
@@ -78,7 +81,6 @@ namespace AQUAS_Lite
                 reflectionCamera.useOcclusionCulling = true;
             }
 
-
             Matrix4x4 reflection = Matrix4x4.zero;
             CalculateReflectionMatrix(ref reflection, reflectionPlane);
             Vector3 oldpos = cam.transform.position;
@@ -94,15 +96,14 @@ namespace AQUAS_Lite
 
             reflectionCamera.cullingMask = ~(1 << 4) & m_ReflectLayers.value; // never render water layer
             reflectionCamera.targetTexture = m_ReflectionTexture;
-            GL.invertCulling = true;        //should be used
-                                            //GL.SetRevertBackfacing (true);    //obsolete
+            GL.invertCulling = true;
             reflectionCamera.transform.position = newpos;
             Vector3 euler = cam.transform.eulerAngles;
             reflectionCamera.transform.eulerAngles = new Vector3(0, euler.y, euler.z);
             reflectionCamera.Render();
             reflectionCamera.transform.position = oldpos;
-            GL.invertCulling = false;        //should be used
-                                             //GL.SetRevertBackfacing (false);   //obsolete
+            GL.invertCulling = false;
+
             Material[] materials = GetComponent<Renderer>().sharedMaterials;
             foreach (Material mat in materials)
             {
@@ -162,7 +163,6 @@ namespace AQUAS_Lite
                 {
                     mysky.enabled = false;
                 }
-
                 else
                 {
                     mysky.enabled = true;
@@ -170,10 +170,6 @@ namespace AQUAS_Lite
                 }
             }
 
-            ///<summary>
-            ///Updates other values to match current camera.
-            ///Even if camera&projection matrices are supplied, some of values are used elsewhere (e.g. skybox uses far plane)
-            /// </summary>
             dest.farClipPlane = src.farClipPlane;
             dest.nearClipPlane = src.nearClipPlane;
             dest.orthographic = src.orthographic;
@@ -189,28 +185,36 @@ namespace AQUAS_Lite
         {
             reflectionCamera = null;
 
-            //Reflection render texture
+            // Reflection render texture
             if (!m_ReflectionTexture || m_OldReflectionTextureSize != m_TextureSize)
             {
                 if (m_ReflectionTexture)
                     DestroyImmediate(m_ReflectionTexture);
+
                 m_ReflectionTexture = new RenderTexture(m_TextureSize, m_TextureSize, 16);
-                m_ReflectionTexture.name = "__MirrorReflection" + GetInstanceID();
+                m_ReflectionTexture.name = "__MirrorReflection" + name;
                 m_ReflectionTexture.isPowerOfTwo = true;
                 m_ReflectionTexture.hideFlags = HideFlags.DontSave;
                 m_OldReflectionTextureSize = m_TextureSize;
             }
 
-            //Camera for reflection
+            // Camera for reflection
             reflectionCamera = m_ReflectionCameras[currentCamera] as Camera;
             if (!reflectionCamera) // catch both not-in-dictionary and in-dictionary-but-deleted-GO
             {
-                GameObject go = new GameObject("Mirror Refl Camera id" + GetInstanceID() + " for " + currentCamera.GetInstanceID(), typeof(Camera), typeof(Skybox));
+                GameObject go = new GameObject(
+                    "Mirror Refl Camera id" + name + " for " + currentCamera.name,
+                    typeof(Camera),
+                    typeof(Skybox));
+
                 reflectionCamera = go.GetComponent<Camera>();
                 reflectionCamera.enabled = false;
                 reflectionCamera.transform.position = transform.position;
                 reflectionCamera.transform.rotation = transform.rotation;
-                reflectionCamera.gameObject.AddComponent<FlareLayer>();
+
+                // FlareLayer was deprecated with the Built-In Render Pipeline in Unity 6.
+                // AQUAS reflection does not require it, especially in URP, so it is intentionally omitted.
+
                 go.hideFlags = HideFlags.HideAndDontSave;
                 m_ReflectionCameras[currentCamera] = reflectionCamera;
             }

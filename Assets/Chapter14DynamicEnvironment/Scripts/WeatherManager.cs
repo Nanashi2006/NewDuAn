@@ -24,6 +24,7 @@ namespace Chapter14DynamicEnvironment
         [Header("Thời gian")]
         public float weatherChangeInterval = 30f;
 
+        public float LightMultiplier => currentWeather == WeatherState.Raining ? 0.55f : currentWeather == WeatherState.Foggy ? 0.75f : 1f;
         private GameObject activeRain;
         private Material ownedRainMaterial;
         private Transform playerTransform;
@@ -65,7 +66,9 @@ namespace Chapter14DynamicEnvironment
             if (keyboard == null)
                 return;
 
-            if (keyboard.digit1Key.wasPressedThisFrame)
+            if (keyboard.rKey.wasPressedThisFrame)
+                SetWeather(currentWeather == WeatherState.Raining ? WeatherState.Sunny : WeatherState.Raining);
+            else if (keyboard.digit1Key.wasPressedThisFrame)
                 SetWeather(WeatherState.Sunny);
             else if (keyboard.digit2Key.wasPressedThisFrame)
                 SetWeather(WeatherState.Raining);
@@ -139,11 +142,53 @@ namespace Chapter14DynamicEnvironment
             if (rainParticlePrefab != null)
             {
                 activeRain = Instantiate(rainParticlePrefab, spawnPosition, Quaternion.identity);
+                activeRain.name = "Rainy VFX - URP Rain";
+                activeRain.transform.SetParent(transform, true);
+                ConfigureUploadedRain(activeRain);
                 return;
             }
 
             activeRain = CreateRuntimeRain(spawnPosition);
             activeRain.transform.SetParent(transform, true);
+        }
+
+        private static void ConfigureUploadedRain(GameObject rain)
+        {
+            // The uploaded effects use Built-in/HDRP defaults. Keep their particle asset and tune it for URP rain.
+            ParticleSystem particles = rain.GetComponent<ParticleSystem>();
+            if (particles == null) return;
+            particles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            ParticleSystem.MainModule main = particles.main;
+            main.loop = true;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.65f, 0.9f);
+            main.startSpeed = 0f;
+            main.startSize = new ParticleSystem.MinMaxCurve(0.02f, 0.035f);
+            main.startColor = Color.white;
+            main.maxParticles = 2500;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            ParticleSystem.EmissionModule emission = particles.emission;
+            emission.rateOverTime = 1000f;
+            emission.SetBursts(new ParticleSystem.Burst[0]);
+            ParticleSystem.ShapeModule shape = particles.shape;
+            shape.enabled = true;
+            shape.shapeType = ParticleSystemShapeType.Box;
+            shape.position = Vector3.zero;
+            shape.rotation = Vector3.zero;
+            shape.scale = new Vector3(26f, 1f, 26f);
+            ParticleSystem.VelocityOverLifetimeModule velocity = particles.velocityOverLifetime;
+            velocity.enabled = true;
+            velocity.space = ParticleSystemSimulationSpace.World;
+            velocity.x = 1.5f;
+            velocity.y = -22f;
+            velocity.z = 0f;
+            ParticleSystemRenderer renderer = rain.GetComponent<ParticleSystemRenderer>();
+            if (renderer != null)
+            {
+                renderer.renderMode = ParticleSystemRenderMode.Stretch;
+                renderer.lengthScale = 4f;
+                renderer.velocityScale = 0.05f;
+            }
+            particles.Play(true);
         }
 
         private GameObject CreateRuntimeRain(Vector3 position)
