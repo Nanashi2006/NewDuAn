@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class LakesideGameplayRebuild : MonoBehaviour
 {
@@ -10,14 +12,14 @@ public class LakesideGameplayRebuild : MonoBehaviour
     [SerializeField] private float runSpeed = 6f;
     [SerializeField] private float gravity = -20f;
     [SerializeField] private float jumpHeight = 2f;
-    [SerializeField] private float mouseSensitivity = 2f;
+    [SerializeField] private float mouseSensitivity = 0.12f;
 
     [Header("Combat")]
     [SerializeField] private Transform attackOrigin;
-    [SerializeField] private float attackRange = 2f;
+    [SerializeField] private float attackRange = 1.25f;
     [SerializeField] private float attackRadius = 1f;
     [SerializeField] private int attackDamage = 20;
-    [SerializeField] private LayerMask enemyLayer;
+    [SerializeField] private LayerMask enemyLayer = ~0;
 
     [Header("View")]
     [SerializeField] private GameObject thirdPersonBody;
@@ -53,7 +55,7 @@ public class LakesideGameplayRebuild : MonoBehaviour
 
     private void HandleViewToggle()
     {
-        if (!Input.GetKeyDown(KeyCode.F5)) return;
+        if (Keyboard.current == null || !Keyboard.current.f5Key.wasPressedThisFrame) return;
         firstPerson = !firstPerson;
         if (thirdPersonBody != null) thirdPersonBody.SetActive(!firstPerson);
         SnapCameraToActiveAnchor();
@@ -69,13 +71,11 @@ public class LakesideGameplayRebuild : MonoBehaviour
 
     private void HandleLook()
     {
-        if (playerCamera == null) return;
+        if (playerCamera == null || Mouse.current == null) return;
 
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
-
-        transform.Rotate(Vector3.up * mouseX);
-        pitch = Mathf.Clamp(pitch - mouseY, -80f, 80f);
+        Vector2 delta = Mouse.current.delta.ReadValue() * mouseSensitivity;
+        transform.Rotate(Vector3.up * delta.x);
+        pitch = Mathf.Clamp(pitch - delta.y, -80f, 80f);
 
         Transform anchor = firstPerson ? firstPersonAnchor : thirdPersonAnchor;
         if (anchor != null)
@@ -87,18 +87,22 @@ public class LakesideGameplayRebuild : MonoBehaviour
 
     private void HandleMovement()
     {
-        if (controller == null) return;
+        if (controller == null || Keyboard.current == null) return;
 
-        float x = Input.GetAxisRaw("Horizontal");
-        float z = Input.GetAxisRaw("Vertical");
+        float x = 0f;
+        float z = 0f;
+        if (Keyboard.current.aKey.isPressed) x -= 1f;
+        if (Keyboard.current.dKey.isPressed) x += 1f;
+        if (Keyboard.current.sKey.isPressed) z -= 1f;
+        if (Keyboard.current.wKey.isPressed) z += 1f;
+
         Vector3 input = new Vector3(x, 0f, z).normalized;
-
-        bool running = Input.GetKey(KeyCode.LeftShift) && input.sqrMagnitude > 0.01f;
+        bool running = Keyboard.current.leftShiftKey.isPressed && input.sqrMagnitude > 0.01f;
         float speed = running ? runSpeed : walkSpeed;
         Vector3 move = (transform.right * input.x + transform.forward * input.z) * speed;
 
         if (controller.isGrounded && verticalVelocity < 0f) verticalVelocity = -2f;
-        if (controller.isGrounded && Input.GetKeyDown(KeyCode.Space))
+        if (controller.isGrounded && Keyboard.current.spaceKey.wasPressedThisFrame)
         {
             verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
             if (animator != null) animator.SetTrigger(JumpHash);
@@ -117,7 +121,7 @@ public class LakesideGameplayRebuild : MonoBehaviour
 
     private void HandleCombat()
     {
-        if (!Input.GetMouseButtonDown(0) || attacking) return;
+        if (Mouse.current == null || !Mouse.current.leftButton.wasPressedThisFrame || attacking) return;
         attacking = true;
         if (animator != null) animator.SetTrigger(AttackHash);
         PerformAttack();
@@ -127,11 +131,15 @@ public class LakesideGameplayRebuild : MonoBehaviour
     private void PerformAttack()
     {
         Transform origin = attackOrigin != null ? attackOrigin : transform;
-        Collider[] hits = Physics.OverlapSphere(origin.position + origin.forward * attackRange, attackRadius, enemyLayer);
+        Vector3 center = origin.position + origin.forward * attackRange;
+        Collider[] hits = Physics.OverlapSphere(center, attackRadius, enemyLayer, QueryTriggerInteraction.Collide);
+        HashSet<LakesideEnemy> damaged = new HashSet<LakesideEnemy>();
+
         for (int i = 0; i < hits.Length; i++)
         {
             LakesideEnemy enemy = hits[i].GetComponentInParent<LakesideEnemy>();
-            if (enemy != null) enemy.TakeDamage(attackDamage);
+            if (enemy != null && damaged.Add(enemy))
+                enemy.TakeDamage(attackDamage);
         }
     }
 
