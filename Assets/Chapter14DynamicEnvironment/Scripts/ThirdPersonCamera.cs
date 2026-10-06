@@ -15,6 +15,47 @@ namespace Chapter14DynamicEnvironment
         public float mouseSensitivity = 0.15f;
         public float smoothSpeed = 12f;
 
+        public bool IsFirstPerson { get; private set; }
+        public Vector3 firstPersonOffset = new Vector3(0f, 1.75f, 0.12f);
+        private Renderer[] bodyRenderers;
+        private CursorLockMode savedLock;
+        private bool savedVisible;
+
+        private void Start()
+        {
+            if (target != null) bodyRenderers = target.GetComponentsInChildren<Renderer>(true);
+            savedLock = Cursor.lockState;
+            savedVisible = Cursor.visible;
+        }
+
+        private void Update()
+        {
+            if (target == null || Keyboard.current == null) return;
+            if (Keyboard.current.f5Key.wasPressedThisFrame)
+            {
+                IsFirstPerson = !IsFirstPerson;
+                if (bodyRenderers != null)
+                    foreach (Renderer body in bodyRenderers) if (body != null) body.forceRenderingOff = IsFirstPerson;
+                Cursor.lockState = IsFirstPerson ? CursorLockMode.Locked : savedLock;
+                Cursor.visible = IsFirstPerson ? false : savedVisible;
+                if (IsFirstPerson) yaw = target.eulerAngles.y;
+                pitch = Mathf.Clamp(pitch, IsFirstPerson ? -80f : 8f, IsFirstPerson ? 80f : 65f);
+            }
+            if (Keyboard.current.escapeKey.wasPressedThisFrame)
+            {
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+            }
+        }
+
+        private void OnDisable()
+        {
+            if (bodyRenderers != null)
+                foreach (Renderer body in bodyRenderers) if (body != null) body.forceRenderingOff = false;
+            Cursor.lockState = savedLock;
+            Cursor.visible = savedVisible;
+        }
+
         private void LateUpdate()
         {
             if (target == null)
@@ -23,17 +64,24 @@ namespace Chapter14DynamicEnvironment
             Mouse mouse = Mouse.current;
             if (mouse != null)
             {
-                if (mouse.rightButton.isPressed)
+                if (mouse.rightButton.isPressed || (IsFirstPerson && Cursor.lockState == CursorLockMode.Locked))
                 {
                     Vector2 delta = mouse.delta.ReadValue();
                     yaw += delta.x * mouseSensitivity;
                     pitch -= delta.y * mouseSensitivity;
-                    pitch = Mathf.Clamp(pitch, 8f, 65f);
+                    pitch = Mathf.Clamp(pitch, IsFirstPerson ? -80f : 8f, IsFirstPerson ? 80f : 65f);
                 }
 
                 float scroll = mouse.scroll.ReadValue().y;
                 if (Mathf.Abs(scroll) > 0.01f)
                     distance = Mathf.Clamp(distance - scroll * 0.01f, minDistance, maxDistance);
+            }
+
+            if (IsFirstPerson)
+            {
+                target.rotation = Quaternion.Euler(0f, yaw, 0f);
+                transform.SetPositionAndRotation(target.TransformPoint(firstPersonOffset), Quaternion.Euler(pitch, yaw, 0f));
+                return;
             }
 
             Quaternion orbitRotation = Quaternion.Euler(pitch, yaw, 0f);

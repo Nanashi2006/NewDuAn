@@ -22,6 +22,8 @@ public class LakesideEnemy : MonoBehaviour
     private int currentHealth;
     private Vector3 startPosition;
     private bool dead;
+    private bool hasSpeed, hasDie;
+    private int mudContacts;
 
     private static readonly int SpeedHash = Animator.StringToHash("Speed");
     private static readonly int DieHash = Animator.StringToHash("Die");
@@ -36,6 +38,12 @@ public class LakesideEnemy : MonoBehaviour
             if (taggedPlayer != null) player = taggedPlayer.transform;
         }
 
+        if (animator != null && animator.runtimeAnimatorController != null)
+            foreach (AnimatorControllerParameter parameter in animator.parameters)
+            {
+                if (parameter.nameHash == SpeedHash && parameter.type == AnimatorControllerParameterType.Float) hasSpeed = true;
+                if (parameter.nameHash == DieHash && parameter.type == AnimatorControllerParameterType.Trigger) hasDie = true;
+            }
         startPosition = transform.position;
         currentHealth = maxHealth;
         if (agent != null) agent.speed = normalSpeed;
@@ -44,7 +52,7 @@ public class LakesideEnemy : MonoBehaviour
 
     private void Update()
     {
-        if (dead || agent == null || player == null) return;
+        if (dead || agent == null || !agent.enabled || !agent.isOnNavMesh || player == null) return;
 
         float distance = Vector3.Distance(transform.position, player.position);
         if (distance <= chaseRange)
@@ -54,7 +62,7 @@ public class LakesideEnemy : MonoBehaviour
         else
             agent.ResetPath();
 
-        if (animator != null)
+        if (animator != null && hasSpeed)
             animator.SetFloat(SpeedHash, agent.velocity.magnitude);
     }
 
@@ -68,8 +76,9 @@ public class LakesideEnemy : MonoBehaviour
 
     public void SetMud(bool insideMud)
     {
+        mudContacts = Mathf.Max(0, mudContacts + (insideMud ? 1 : -1));
         if (agent != null && !dead)
-            agent.speed = insideMud ? mudSpeed : normalSpeed;
+            agent.speed = mudContacts > 0 ? mudSpeed : normalSpeed;
     }
 
     private void RefreshHealthUI()
@@ -83,7 +92,7 @@ public class LakesideEnemy : MonoBehaviour
     private void Die()
     {
         dead = true;
-        if (agent != null)
+        if (agent != null && agent.enabled && agent.isOnNavMesh)
         {
             agent.ResetPath();
             agent.isStopped = true;
@@ -93,7 +102,9 @@ public class LakesideEnemy : MonoBehaviour
         if (worldHealth != null) worldHealth.gameObject.SetActive(false);
         else if (healthCanvas != null && healthCanvas != gameObject) healthCanvas.SetActive(false);
 
-        if (animator != null) animator.SetTrigger(DieHash);
+        if (animator != null && hasDie) animator.SetTrigger(DieHash);
+        LakesideAnimationDriver animation = GetComponent<LakesideAnimationDriver>();
+        if (animation != null) animation.PlayDeath();
 
         Collider[] colliders = GetComponentsInChildren<Collider>();
         foreach (Collider c in colliders) c.enabled = false;

@@ -14,16 +14,9 @@ namespace Chapter14DynamicEnvironment
 
         public bool IsDead { get; private set; }
 
-        private Renderer[] renderers;
-
         private void Awake()
         {
             currentHealth = maxHealth;
-        }
-
-        private void Start()
-        {
-            renderers = GetComponentsInChildren<Renderer>(true);
         }
 
         public void TakeDamage(float amount)
@@ -53,21 +46,12 @@ namespace Chapter14DynamicEnvironment
             foreach (Collider col in colliders)
                 col.enabled = false;
 
-            foreach (Renderer renderer in renderers)
+            LakesideAnimationDriver animation = GetComponent<LakesideAnimationDriver>();
+            if (animation == null || !animation.PlayDeath())
             {
-                if (renderer == null)
-                    continue;
-
-                foreach (Material material in renderer.materials)
-                {
-                    if (material != null && material.HasProperty("_BaseColor"))
-                        material.SetColor("_BaseColor", new Color(0.2f, 0.2f, 0.2f, 1f));
-                }
+                Transform visual = transform.Find("Visual");
+                if (visual != null) visual.localRotation = Quaternion.Euler(0f, 0f, 75f);
             }
-
-            Transform visual = transform.Find("Visual");
-            if (visual != null)
-                visual.localRotation = Quaternion.Euler(0f, 0f, 75f);
 
             yield return new WaitForSeconds(destroyDelay);
 

@@ -53,8 +53,8 @@ namespace Chapter14DynamicEnvironment
             GUI.Label(new Rect(39,h-57,370,24), player != null && player.IsSwimming ? "Đang bơi · Di chuyển chậm trong nước" : "Khám phá làng · H: hướng dẫn điều khiển", small);
             if (showHelp)
             {
-                Panel(new Rect(24,115,365,160));
-                GUI.Label(new Rect(40,127,325,140), "WASD  Di chuyển       Shift  Chạy\nSpace  Nhảy / bơi       Chuột trái  Chém\nChuột phải + kéo  Xoay camera\nCon lăn  Thu phóng\n1  Nắng       2  Mưa       3  Sương mù\nMỗi cú chém gây 20 HP · Enemy 100 HP", small);
+                Panel(new Rect(24,115,400,180));
+                GUI.Label(new Rect(40,127,365,160), "WASD  Di chuyển       Shift  Chạy\nSpace  Nhảy / bơi       Chuột trái  Chém\nChuột phải + kéo  Xoay camera\nF5  Góc nhìn 1 / 3 · Con lăn  Thu phóng\n1  Nắng · 2 / R  Mưa · 3  Sương mù\nMỗi cú chém gây 20 HP · Enemy 100 HP", small);
             }
             GUI.matrix = old;
         }

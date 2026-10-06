@@ -6,9 +6,12 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Scenes/LakesideVillage_Rebuilt.unity
+    guid: b21dbb90495ccacc4b0629c0166a415f
+  - enabled: 0
     path: Assets/Scenes/SampleScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
-  - enabled: 1
+  - enabled: 0
     path: Assets/Chapter14DynamicEnvironment/Scenes/Chapter14_Demo.unity
     guid: 2c1400d3e8aa4ad9a55f6e18a5fdbe14
   m_configObjects:
