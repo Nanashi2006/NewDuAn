@@ -102,6 +102,7 @@ namespace Chapter14DynamicEnvironment
             GUI.DrawTexture(new Rect(x, y, width * ratio, height), Texture2D.whiteTexture);
 
             GUI.color = previous;
+            GUI.Label(new Rect(x, y - 24f, width + 12f, 22f), $"Goblin  {currentHealth:0}/{maxHealth:0}");
         }
     }
 }

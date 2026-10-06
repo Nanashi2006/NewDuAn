@@ -25,6 +25,7 @@ namespace Chapter14DynamicEnvironment
         public float weatherChangeInterval = 30f;
 
         private GameObject activeRain;
+        private Material ownedRainMaterial;
         private Transform playerTransform;
 
         private void Start()
@@ -102,6 +103,11 @@ namespace Chapter14DynamicEnvironment
                 Destroy(activeRain);
                 activeRain = null;
             }
+            if (ownedRainMaterial != null)
+            {
+                Destroy(ownedRainMaterial);
+                ownedRainMaterial = null;
+            }
 
             switch (state)
             {
@@ -137,11 +143,12 @@ namespace Chapter14DynamicEnvironment
             }
 
             activeRain = CreateRuntimeRain(spawnPosition);
+            activeRain.transform.SetParent(transform, true);
         }
 
-        private static GameObject CreateRuntimeRain(Vector3 position)
+        private GameObject CreateRuntimeRain(Vector3 position)
         {
-            GameObject rain = new GameObject("Rain_VFX_Runtime");
+            GameObject rain = new GameObject("Rain Particles");
             rain.transform.position = position;
 
             ParticleSystem particleSystem = rain.AddComponent<ParticleSystem>();
@@ -178,6 +185,7 @@ namespace Chapter14DynamicEnvironment
             if (shader != null)
             {
                 Material rainMaterial = new Material(shader);
+                ownedRainMaterial = rainMaterial;
                 Color rainColor = new Color(0.72f, 0.85f, 1f, 0.65f);
 
                 if (rainMaterial.HasProperty("_BaseColor"))
@@ -204,12 +212,10 @@ namespace Chapter14DynamicEnvironment
             return rain;
         }
 
-        private void OnGUI()
+        private void OnDestroy()
         {
-            GUI.Box(
-                new Rect(Screen.width - 180f, 12f, 168f, 30f),
-                "Weather: " + currentWeather
-            );
+            if (ownedRainMaterial != null) Destroy(ownedRainMaterial);
         }
+
     }
 }

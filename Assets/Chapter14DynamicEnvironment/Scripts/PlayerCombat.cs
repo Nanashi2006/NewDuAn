@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -48,39 +47,9 @@ namespace Chapter14DynamicEnvironment
                 enemyHealth.TakeDamage(damage);
             }
 
-            StartCoroutine(ShowAttackFlash(center));
+            CharacterPose pose = GetComponent<CharacterPose>();
+            if (pose != null) pose.Swing();
         }
 
-        private IEnumerator ShowAttackFlash(Vector3 worldPosition)
-        {
-            GameObject flash = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            flash.name = "AttackFlash";
-            flash.transform.position = worldPosition;
-            flash.transform.localScale = Vector3.one * attackRadius * 2f;
-
-            Collider col = flash.GetComponent<Collider>();
-            if (col != null)
-                col.enabled = false;
-
-            Renderer renderer = flash.GetComponent<Renderer>();
-            if (renderer != null)
-            {
-                Shader shader = Shader.Find("Universal Render Pipeline/Unlit");
-                if (shader == null)
-                    shader = Shader.Find("Universal Render Pipeline/Lit");
-
-                if (shader != null)
-                {
-                    Material material = new Material(shader);
-                    Color flashColor = new Color(1f, 0.55f, 0.12f, 0.22f);
-                    if (material.HasProperty("_BaseColor"))
-                        material.SetColor("_BaseColor", flashColor);
-                    renderer.material = material;
-                }
-            }
-
-            yield return new WaitForSeconds(0.08f);
-            Destroy(flash);
-        }
     }
 }

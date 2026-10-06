@@ -154,9 +154,5 @@ namespace Chapter14DynamicEnvironment
             }
         }
 
-        private void OnGUI()
-        {
-            GUI.Box(new Rect(Screen.width * 0.5f - 48f, 12f, 96f, 30f), currentTime.ToString("HH:mm"));
-        }
     }
 }
