@@ -8,6 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: AQUAS_Lite_Water
+<<<<<<< HEAD
   m_Shader: {fileID: 4800000, guid: d54a881b830cae544a72985daaece999, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -17,6 +18,12 @@ Material:
   - _ENABLEREALTIMEREFLECTIONS_ON
   - _ENABLEREFLECTIONS_ON
   m_LightmapFlags: 5
+=======
+  m_Shader: {fileID: 4800000, guid: b49ea581ae011c595f574d21007a8307, type: 3}
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+>>>>>>> 8957a847ddacd9cc51e5a5a6f083581c2bfe6cc7
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
@@ -27,33 +34,18 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _BumpMap:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: ef5d03cb57f820145b89db1123c104c6, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - _DetailAlbedoMap:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _DetailMask:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _DetailNormalMap:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _EmissionMap:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _FoamTexture:
+    - _FoamMap:
         m_Texture: {fileID: 2800000, guid: 6cb123095ca4b4e4680773312ba1c076, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
-    - _MainTex:
+    - _BaseMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+<<<<<<< HEAD
     - _MetallicGlossMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -137,3 +129,10 @@ Material:
     - _SpecularColor: {r: 0.9716981, g: 0.9139198, b: 0.7104397, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
+=======
+    m_Ints: []
+    m_Floats: []
+    m_Colors:
+    - _BaseColor: {r: 0.055, g: 0.32, b: 0.4, a: 0.88}
+  m_BuildTextureStacks: []
+>>>>>>> 8957a847ddacd9cc51e5a5a6f083581c2bfe6cc7

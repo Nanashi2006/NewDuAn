@@ -26,6 +26,8 @@ namespace Chapter14DynamicEnvironment
         private EnemyHealth health;
         private Vector3 startPosition;
         private float nextRepathTime;
+        private float normalSpeed;
+        private int mudContacts;
 
         public bool IsDead => health != null && health.IsDead;
 
@@ -33,6 +35,7 @@ namespace Chapter14DynamicEnvironment
         {
             agent = GetComponent<NavMeshAgent>();
             health = GetComponent<EnemyHealth>();
+            normalSpeed = agent.speed;
         }
 
         private void Start()
@@ -89,6 +92,12 @@ namespace Chapter14DynamicEnvironment
                 agent.isStopped = true;
                 agent.ResetPath();
             }
+        }
+
+        public void SetMud(bool inside)
+        {
+            mudContacts = Mathf.Max(0, mudContacts + (inside ? 1 : -1));
+            if (agent != null && !IsDead) agent.speed = mudContacts > 0 ? 1.5f : normalSpeed;
         }
 
         public bool CanSeePlayer()

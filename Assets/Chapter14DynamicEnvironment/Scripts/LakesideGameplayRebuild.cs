@@ -30,6 +30,8 @@ public class LakesideGameplayRebuild : MonoBehaviour
     private float pitch;
     private bool firstPerson;
     private bool attacking;
+    private bool hasSpeed, hasRun, hasJump, hasAttack;
+    private LakesideAnimationDriver animationDriver;
 
     private static readonly int SpeedHash = Animator.StringToHash("Speed");
     private static readonly int RunHash = Animator.StringToHash("Run");
@@ -41,6 +43,15 @@ public class LakesideGameplayRebuild : MonoBehaviour
         if (controller == null) controller = GetComponent<CharacterController>();
         if (animator == null) animator = GetComponentInChildren<Animator>();
         if (playerCamera == null) playerCamera = Camera.main;
+        animationDriver = GetComponent<LakesideAnimationDriver>();
+        if (animator != null && animator.runtimeAnimatorController != null)
+            foreach (AnimatorControllerParameter parameter in animator.parameters)
+            {
+                if (parameter.nameHash == SpeedHash && parameter.type == AnimatorControllerParameterType.Float) hasSpeed = true;
+                if (parameter.nameHash == RunHash && parameter.type == AnimatorControllerParameterType.Bool) hasRun = true;
+                if (parameter.nameHash == JumpHash && parameter.type == AnimatorControllerParameterType.Trigger) hasJump = true;
+                if (parameter.nameHash == AttackHash && parameter.type == AnimatorControllerParameterType.Trigger) hasAttack = true;
+            }
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
@@ -57,7 +68,8 @@ public class LakesideGameplayRebuild : MonoBehaviour
     {
         if (Keyboard.current == null || !Keyboard.current.f5Key.wasPressedThisFrame) return;
         firstPerson = !firstPerson;
-        if (thirdPersonBody != null) thirdPersonBody.SetActive(!firstPerson);
+        if (thirdPersonBody != null)
+            foreach (Renderer body in thirdPersonBody.GetComponentsInChildren<Renderer>(true)) body.forceRenderingOff = firstPerson;
         SnapCameraToActiveAnchor();
     }
 
@@ -105,7 +117,7 @@ public class LakesideGameplayRebuild : MonoBehaviour
         if (controller.isGrounded && Keyboard.current.spaceKey.wasPressedThisFrame)
         {
             verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
-            if (animator != null) animator.SetTrigger(JumpHash);
+            if (animator != null && hasJump) animator.SetTrigger(JumpHash);
         }
 
         verticalVelocity += gravity * Time.deltaTime;
@@ -114,8 +126,8 @@ public class LakesideGameplayRebuild : MonoBehaviour
 
         if (animator != null)
         {
-            animator.SetFloat(SpeedHash, input.magnitude);
-            animator.SetBool(RunHash, running);
+            if (hasSpeed) animator.SetFloat(SpeedHash, input.magnitude);
+            if (hasRun) animator.SetBool(RunHash, running);
         }
     }
 
@@ -123,9 +135,10 @@ public class LakesideGameplayRebuild : MonoBehaviour
     {
         if (Mouse.current == null || !Mouse.current.leftButton.wasPressedThisFrame || attacking) return;
         attacking = true;
-        if (animator != null) animator.SetTrigger(AttackHash);
+        if (animator != null && hasAttack) animator.SetTrigger(AttackHash);
+        if (animationDriver != null) animationDriver.PlayAttack();
         PerformAttack();
-        Invoke(nameof(ResetAttack), 0.35f);
+        Invoke(nameof(ResetAttack), animationDriver != null ? animationDriver.AttackDuration : 0.65f);
     }
 
     private void PerformAttack()

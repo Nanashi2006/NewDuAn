@@ -24,12 +24,14 @@ namespace Chapter14DynamicEnvironment
 
         public DateTime CurrentTime => currentTime;
 
+        private WeatherManager weather;
         private DateTime currentTime;
         private TimeSpan sunriseTime;
         private TimeSpan sunsetTime;
 
         private void Start()
         {
+            weather = FindAnyObjectByType<WeatherManager>();
             currentTime = DateTime.Today + TimeSpan.FromHours(startHour);
             sunriseTime = TimeSpan.FromHours(sunriseHour);
             sunsetTime = TimeSpan.FromHours(sunsetHour);
@@ -127,7 +129,7 @@ namespace Chapter14DynamicEnvironment
 
             if (sunLight != null)
             {
-                sunLight.intensity = lightIntensityCurve.Evaluate(timePercent);
+                sunLight.intensity = lightIntensityCurve.Evaluate(timePercent) * (weather != null ? weather.LightMultiplier : 1f);
                 sunLight.color = Color.Lerp(
                     new Color(1f, 0.55f, 0.35f),
                     Color.white,

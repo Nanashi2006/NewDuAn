@@ -29,6 +29,9 @@ namespace AQUAS_Lite
 
         public void OnWillRenderObject()
         {
+            // Camera.Render from inside an SRP render callback re-enters URP's frame context.
+            // This legacy reflection is only supported by the Built-in pipeline.
+            if (UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline != null) return;
 
 #if UNITY_5_3 || UNITY_5_4 || UNITY_5_5
         if (disableInEditMode && !Application.isPlaying)
@@ -189,7 +192,7 @@ namespace AQUAS_Lite
                     DestroyImmediate(m_ReflectionTexture);
 
                 m_ReflectionTexture = new RenderTexture(m_TextureSize, m_TextureSize, 16);
-                m_ReflectionTexture.name = "__MirrorReflection" + GetEntityId();
+                m_ReflectionTexture.name = "__MirrorReflection" + name;
                 m_ReflectionTexture.isPowerOfTwo = true;
                 m_ReflectionTexture.hideFlags = HideFlags.DontSave;
                 m_OldReflectionTextureSize = m_TextureSize;
@@ -200,7 +203,7 @@ namespace AQUAS_Lite
             if (!reflectionCamera) // catch both not-in-dictionary and in-dictionary-but-deleted-GO
             {
                 GameObject go = new GameObject(
-                    "Mirror Refl Camera id" + GetEntityId() + " for " + currentCamera.GetEntityId(),
+                    "Mirror Refl Camera id" + name + " for " + currentCamera.name,
                     typeof(Camera),
                     typeof(Skybox));
 

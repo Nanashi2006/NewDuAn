@@ -7,6 +7,9 @@ Shader "Chapter14/LakesideLit"
         _Smoothness ("Smoothness", Range(0,1)) = 0.25
         _Ground ("Landscape blending", Float) = 0
         _BaseMap ("Texture", 2D) = "white" {}
+        _GroundMap ("Grass texture", 2D) = "white" {}
+        _BankMap ("Bank texture", 2D) = "white" {}
+        _TextureWeight ("Texture blend", Range(0,1)) = 0
         [HideInInspector] _Cutoff ("Cutoff", Float) = 0.5
         [HideInInspector] _Cull ("Cull", Float) = 2
     }
@@ -27,9 +30,11 @@ Shader "Chapter14/LakesideLit"
             #pragma multi_compile_fog
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+            TEXTURE2D(_GroundMap); SAMPLER(sampler_GroundMap);
+            TEXTURE2D(_BankMap); SAMPLER(sampler_BankMap);
             CBUFFER_START(UnityPerMaterial)
             float4 _BaseColor, _EmissionColor, _BaseMap_ST;
-            float _Smoothness, _Ground, _Cutoff, _Cull;
+            float _Smoothness, _Ground, _Cutoff, _Cull, _TextureWeight;
             CBUFFER_END
             struct Attributes { float4 positionOS:POSITION; float3 normalOS:NORMAL; };
             struct Varyings { float4 positionCS:SV_POSITION; float3 positionWS:TEXCOORD0; float3 normalWS:TEXCOORD1; float fog:TEXCOORD2; };
@@ -52,7 +57,9 @@ Shader "Chapter14/LakesideLit"
                     float noise = sin(i.positionWS.x * 0.31) * sin(i.positionWS.z * 0.24);
                     float3 grass = lerp(float3(0.22,0.37,0.16), float3(0.38,0.49,0.22), noise * 0.5 + 0.5);
                     float bank = 1 - smoothstep(0.88,1.17,r);
-                    color = lerp(grass, float3(0.59,0.48,0.31), bank);
+                    grass = lerp(grass, SAMPLE_TEXTURE2D(_GroundMap,sampler_GroundMap,i.positionWS.xz / 6).rgb, _TextureWeight);
+                    float3 dirt = lerp(float3(0.59,0.48,0.31), SAMPLE_TEXTURE2D(_BankMap,sampler_BankMap,i.positionWS.xz / 5).rgb, _TextureWeight);
+                    color = lerp(grass, dirt, bank);
                     color = lerp(color,float3(0.21,0.31,0.29),saturate(-i.positionWS.y / 3));
                 }
                 Light light = GetMainLight(TransformWorldToShadowCoord(i.positionWS));
