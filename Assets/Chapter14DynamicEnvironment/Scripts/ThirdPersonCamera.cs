@@ -40,6 +40,11 @@ namespace Chapter14DynamicEnvironment
             Vector3 focusPoint = target.position + targetOffset;
             Vector3 desiredPosition = focusPoint - orbitRotation * Vector3.forward * distance;
 
+            Vector3 toCamera = desiredPosition - focusPoint;
+            if (Physics.SphereCast(focusPoint, 0.2f, toCamera.normalized, out RaycastHit hit,
+                distance, ~(1 << 2), QueryTriggerInteraction.Ignore))
+                desiredPosition = focusPoint + toCamera.normalized * Mathf.Max(0.5f, hit.distance - 0.2f);
+
             float t = 1f - Mathf.Exp(-smoothSpeed * Time.deltaTime);
             transform.position = Vector3.Lerp(transform.position, desiredPosition, t);
             transform.rotation = Quaternion.Slerp(

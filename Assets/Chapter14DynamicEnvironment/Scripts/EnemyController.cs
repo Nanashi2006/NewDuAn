@@ -116,7 +116,8 @@ namespace Chapter14DynamicEnvironment
                     obstacleMask,
                     QueryTriggerInteraction.Ignore))
             {
-                return hit.transform.root == playerTransform.root;
+                PlayerController seenPlayer = hit.collider.GetComponentInParent<PlayerController>();
+                return seenPlayer != null && seenPlayer.transform == playerTransform;
             }
 
             return true;
