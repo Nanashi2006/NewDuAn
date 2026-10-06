@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class LakesideRainController : MonoBehaviour
 {
@@ -7,7 +8,6 @@ public class LakesideRainController : MonoBehaviour
     [SerializeField] private Light directionalLight;
     [SerializeField] private float clearIntensity = 1.1f;
     [SerializeField] private float rainyIntensity = 0.45f;
-    [SerializeField] private KeyCode toggleKey = KeyCode.R;
 
     private bool raining;
 
@@ -18,7 +18,7 @@ public class LakesideRainController : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(toggleKey))
+        if (Keyboard.current != null && Keyboard.current.rKey.wasPressedThisFrame)
             SetRain(!raining);
     }
 
