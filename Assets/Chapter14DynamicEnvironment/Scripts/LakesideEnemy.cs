@@ -48,17 +48,11 @@ public class LakesideEnemy : MonoBehaviour
 
         float distance = Vector3.Distance(transform.position, player.position);
         if (distance <= chaseRange)
-        {
             agent.SetDestination(player.position);
-        }
         else if (Vector3.Distance(transform.position, startPosition) > returnDistance)
-        {
             agent.SetDestination(startPosition);
-        }
         else
-        {
             agent.ResetPath();
-        }
 
         if (animator != null)
             animator.SetFloat(SpeedHash, agent.velocity.magnitude);
@@ -80,12 +74,10 @@ public class LakesideEnemy : MonoBehaviour
 
     private void RefreshHealthUI()
     {
-        if (healthSlider != null)
-        {
-            healthSlider.minValue = 0;
-            healthSlider.maxValue = maxHealth;
-            healthSlider.value = currentHealth;
-        }
+        if (healthSlider == null) return;
+        healthSlider.minValue = 0;
+        healthSlider.maxValue = maxHealth;
+        healthSlider.value = currentHealth;
     }
 
     private void Die()
@@ -96,7 +88,11 @@ public class LakesideEnemy : MonoBehaviour
             agent.ResetPath();
             agent.isStopped = true;
         }
-        if (healthCanvas != null) healthCanvas.SetActive(false);
+
+        Canvas worldHealth = GetComponentInChildren<Canvas>(true);
+        if (worldHealth != null) worldHealth.gameObject.SetActive(false);
+        else if (healthCanvas != null && healthCanvas != gameObject) healthCanvas.SetActive(false);
+
         if (animator != null) animator.SetTrigger(DieHash);
 
         Collider[] colliders = GetComponentsInChildren<Collider>();
